@@ -7,9 +7,15 @@ defmodule Neuron do
 
   # convenience function to request a prediction, which will be sent to outgoing_pid
   def please_predict(pid), do: send(pid, {:predict})
+  def connect_input_from(pid, neuron), do: send(pid, {:connect, neuron})
 
+  # a state, expecting connections and a request to predict
   defp expect_trigger(state = {:state, [outgoing: outgoing_pid, incoming: incoming_pids]}) do
     receive do
+      # connect and continue
+      {:connect, neuron} ->
+        expect_trigger({:state, [outgoing: outgoing_pid, incoming: [neuron | incoming_pids]]})
+
       {:predict} ->
         # some demo parameters
         delay_ms = 100

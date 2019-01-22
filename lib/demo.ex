@@ -19,13 +19,16 @@ defmodule Demo do
     {:ok, target_neuron} = new_neuron_connected_to(self())
     IO.puts("Started top level: #{inspect(target_neuron)}")
 
-    # n = 1000
-    # 1..n
-    # |> Enum.map(fun)
+    n = 1000
+    1..n
+    |> Enum.map(fn _ ->
+      {:ok, neuron} = new_neuron_connected_to(target_neuron)
+      target_neuron |> Neuron.connect_input_from(neuron)
+    end)
 
     target_neuron |> Neuron.please_predict()
 
-    # just once for the demo ...
+    # just once for the demo
     wait_for_reply()
 
     IO.puts("stopping")
@@ -36,7 +39,7 @@ defmodule Demo do
       x -> IO.puts("received: #{inspect(x)}")
     after
       # just exit
-      10_000 -> false
+      5_000 -> false
     end
   end
 
