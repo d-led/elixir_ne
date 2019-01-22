@@ -16,8 +16,31 @@ defmodule Demo do
   end
 
   defp run() do
-    {:ok, target_neuron} = Task.start(Neuron, :run, [{:state, [outgoing: self(), incoming: []]}])
+    {:ok, target_neuron} = new_neuron_connected_to(self())
     IO.puts("Started top level: #{inspect(target_neuron)}")
+
+    # n = 1000
+    # 1..n
+    # |> Enum.map(fun)
+
+    target_neuron |> Neuron.please_predict()
+
+    # just once for the demo ...
+    wait_for_reply()
+
     IO.puts("stopping")
+  end
+
+  defp wait_for_reply() do
+    receive do
+      x -> IO.puts("received: #{inspect(x)}")
+    after
+      # just exit
+      10_000 -> false
+    end
+  end
+
+  defp new_neuron_connected_to(pid) do
+    Task.start(Neuron, :start, [pid])
   end
 end

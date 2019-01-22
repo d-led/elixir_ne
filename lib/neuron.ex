@@ -1,8 +1,13 @@
 defmodule Neuron do
+
+  # starting the receive loop
   def start(outgoing_pid) do
     state = {:state, [outgoing: outgoing_pid, incoming: []]}
     loop(state)
   end
+
+  # convenience function to request a prediction, which will be sent to outgoing_pid
+  def please_predict(pid), do: send(pid, {:predict})
 
   defp loop(state = {:state, [outgoing: outgoing_pid, incoming: incoming_pids]}) do
     receive do
@@ -18,13 +23,13 @@ defmodule Neuron do
         prediction = predict(incoming_pids)
 
         # return a prediction
-        send(outgoing_pid, prediction)
+        send(outgoing_pid, {:prediction, [prediction: prediction, delay: delay]})
 
         # repeat until timeout
         loop(state)
     after
       # just exit
-      1000 -> stop(incoming_pids)
+      3_000 -> stop(incoming_pids)
     end
   end
 
@@ -44,8 +49,8 @@ defmodule Neuron do
   defp prediction, do: :rand.uniform(1000)
 
   # if there are no incoming pids, we're not a root neuron
-  defp stop([]), do: false
+  defp stop([]), do: IO.puts("X - #{inspect(self())}")
+  false
 
   defp stop(_), do: IO.puts("Shutting down a neuron without incoming ones: #{inspect(self())}")
-
 end
