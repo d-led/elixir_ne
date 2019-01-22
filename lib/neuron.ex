@@ -1,15 +1,14 @@
 defmodule Neuron do
-
   # starting the receive loop
   def start(outgoing_pid) do
     state = {:state, [outgoing: outgoing_pid, incoming: []]}
-    loop(state)
+    expect_trigger(state)
   end
 
   # convenience function to request a prediction, which will be sent to outgoing_pid
   def please_predict(pid), do: send(pid, {:predict})
 
-  defp loop(state = {:state, [outgoing: outgoing_pid, incoming: incoming_pids]}) do
+  defp expect_trigger(state = {:state, [outgoing: outgoing_pid, incoming: incoming_pids]}) do
     receive do
       {:predict} ->
         # some demo parameters
@@ -23,10 +22,14 @@ defmodule Neuron do
         prediction = predict(incoming_pids)
 
         # return a prediction
-        send(outgoing_pid, {:prediction, [prediction: prediction, delay: delay]})
+        send(
+          outgoing_pid,
+          {:prediction,
+           [prediction: prediction, delay: delay, input_count: Enum.count(incoming_pids)]}
+        )
 
         # repeat until timeout
-        loop(state)
+        expect_trigger(state)
     after
       # just exit
       3_000 -> stop(incoming_pids)
