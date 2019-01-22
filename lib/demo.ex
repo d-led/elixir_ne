@@ -20,6 +20,7 @@ defmodule Demo do
     IO.puts("Started top level: #{inspect(target_neuron)}")
 
     n = 1000
+
     1..n
     |> Enum.map(fn _ ->
       {:ok, neuron} = new_neuron_connected_to(target_neuron)
