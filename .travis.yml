@@ -1,0 +1,9 @@
+language: elixir
+
+elixir: '1.5'
+
+script:
+  - mix clean && mix compile
+  - mix run
+  - mix run # one more time
+  - mix run # one more time
