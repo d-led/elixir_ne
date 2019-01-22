@@ -20,9 +20,13 @@
 
 ## ideas behind it
 
-- brain has metabolic constraints: [Theriault et. al. 10.31234/osf.io/x5rbs](https://psyarxiv.com/x5rbs/)
-- neurons have thousands of synapses: [Hawkins & Ahmad](https://www.frontiersin.org/articles/10.3389/fncir.2016.00023/full)
-- neurons might be voting on predictions [Hawkins et. al. doi:10.3389/FNCIR.2018.00121](https://numenta.com/neuroscience-research/research-publications/papers/thousand-brains-theory-of-intelligence-companion-paper/)
+- brain has metabolic constraints: [Theriault et. al.: The sense of should: A biologically-based model of social pressure 10.31234/osf.io/x5rbs](https://psyarxiv.com/x5rbs/)
+- neurons have thousands of synapses: [Hawkins & Ahmad: Why Neurons Have Thousands of Synapses, a Theory of Sequence Memory in Neocortex doi:10.3389/fncir.2016.00023](https://www.frontiersin.org/articles/10.3389/fncir.2016.00023/full)
+- neurons might be voting on predictions [Hawkins et. al.: A Framework for Intelligence and Cortical Function Based on Grid Cells in the Neocortex doi:10.3389/FNCIR.2018.00121](https://numenta.com/neuroscience-research/research-publications/papers/thousand-brains-theory-of-intelligence-companion-paper/)
 - neurons are physically parallel
 - each neuron (or an aggregation of neurons for efficiency reason) can be represented by an [Erlang process](https://en.wikipedia.org/wiki/Erlang_(programming_language)#Erlang_Worldview)
 
+## disclaimer
+
+- I'm not a professional researcher
+- this is a spare time project to play around with ideas
