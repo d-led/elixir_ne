@@ -12,6 +12,7 @@
   - if there are no connections, the neuron just returns a random number and sleeps a bit (`delay`)
   - if there are connections, the neuron tries to receive all the predictions, but within a deadline ("metabolic constraint"): `deadline_ms`
   - returns the maximal value received so far or `-1` if none were received within a timeout
+  - *TODO*: return the best prediction if it's above a numeric threshold
   - deadline example: `{:prediction, %{delay: 142, input_count: 1000, prediction: [value: 65.30085608551246, reason: :deadline, inputs_used: 496]}}`
   - all received: `{:prediction, %{delay: 117, input_count: 1000, prediction: [value: 61.81215141710118, reason: :all_received, inputs_used: 1000]}`
   - none received within time limits: `{:prediction, %{delay: 101, input_count: 1000, prediction: [value: -1, reason: :deadline, inputs_used: 0]}}`
