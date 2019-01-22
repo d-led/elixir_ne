@@ -21,7 +21,7 @@ defmodule Neuron do
         delay_ms = 100
         delay = round(delay_ms + 0.5 * :rand.uniform(delay_ms))
 
-        # do a prediction
+        # make a prediction
         prediction = predict(incoming_pids)
 
         # pretend to take time and energy
@@ -50,7 +50,8 @@ defmodule Neuron do
     incoming_pids
     |> Enum.each(fn pid -> send(pid, {:predict}) end)
 
-    Process.send_after(self(), {:deadline}, 150)
+    deadline_ms = 130
+    Process.send_after(self(), {:deadline}, deadline_ms)
     wait_for_predictions(Enum.count(incoming_pids))
   end
 
