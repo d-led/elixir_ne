@@ -24,7 +24,7 @@
 
 ```shell
 # increase maximum allowed processes
-export ELIXIR_ERL_OPTS="+P 5000000"
+export ELIXIR_ERL_OPTIONS="+P 5000000"
 time N_NEURONS=1000000 mix run
 ```
 
