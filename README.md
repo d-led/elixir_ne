@@ -20,6 +20,13 @@
 - see the build output: [![Build Status](https://travis-ci.org/d-led/elixir_ne.svg?branch=master)](https://travis-ci.org/d-led/elixir_ne)
 - run with: `mix run --no-halt`. Stop with `Ctrl+C` twice
   - requires [Elixir](https://elixir-lang.org/install.html) being installed
+  - to run with more than 1000 neurons:
+
+```shell
+# increase maximum allowed processes
+export ELIXIR_ERL_OPTS="+P 5000000"
+time N_NEURONS=1000000 mix run
+```
 
 ## ideas behind it
 

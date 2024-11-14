@@ -101,8 +101,10 @@ defmodule Neuron do
   defp prediction, do: abs(:rand.normal(50, 20))
 
   # if there are no incoming pids, we're not a root neuron
-  defp stop([]), do: IO.puts("X - #{inspect(self())}")
-  false
+  defp stop([]) do
+    # IO.puts("X - #{inspect(self())}")
+    false
+  end
 
   defp stop(_), do: IO.puts("Shutting down a neuron without incoming ones: #{inspect(self())}")
 end
