@@ -19,7 +19,7 @@ defmodule Demo do
     {:ok, target_neuron} = new_neuron_connected_to(self())
     IO.puts("Started top level: #{inspect(target_neuron)}")
 
-    n = Application.get_env(:elixir_ne, :number_of_neurons, "1000")
+    n = Application.fetch_env!(:elixir_ne, :number_of_neurons)
 
     IO.puts("Number of neurons: #{n}")
 

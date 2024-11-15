@@ -18,7 +18,7 @@ defmodule Neuron do
 
       {:predict} ->
         # some demo parameters
-        delay_ms = 100
+        delay_ms = Application.get_env(:elixir_ne, :neuron_simulate_computation_ms)
         delay = round(delay_ms + 0.5 * :rand.uniform(delay_ms))
 
         # make a prediction
@@ -50,7 +50,7 @@ defmodule Neuron do
     incoming_pids
     |> Enum.each(fn pid -> send(pid, {:predict}) end)
 
-    deadline_ms = 130
+    deadline_ms = Application.fetch_env!(:elixir_ne, :prediction_deadline_ms) |> IO.inspect(label: "WAT")
     Process.send_after(self(), {:deadline}, deadline_ms)
     wait_for_predictions(Enum.count(incoming_pids))
   end
