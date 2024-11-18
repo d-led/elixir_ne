@@ -10,7 +10,6 @@ config :elixir_ne,
 
 config :elixir_ne,
        :prediction_deadline_ms,
-       (System.get_env("PREDICTION_DEADLINE_MS") || "130")  |> String.to_integer()
-
+       (System.get_env("PREDICTION_DEADLINE_MS") || "130") |> String.to_integer()
 
 # import_config "#{config_env()}.exs"
