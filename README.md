@@ -28,6 +28,24 @@ export ELIXIR_ERL_OPTIONS="+P 5000000"
 time N_NEURONS=1000000 mix run
 ```
 
+## distributed neurons
+
+- start one shell with `iex --name a@127.0.0.1 -S mix`
+- and another one with `iex --name b@127.0.0.1 -S mix`
+  - ignore the initial unconnected run
+- connect the nodes e.g. on `a`: `Node.connect(:'b@127.0.0.1')`
+- make sure, the nodes are connected: `Node.list()`
+- run the distributed demo: `Demo.start(:demo, [])``
+- observe the result:
+
+```shell
+Neurons started on nodes: %{"a@127.0.0.1": 517, "b@127.0.0.1": 483}
+received: {:prediction, %{delay: 149, input_count: 1000, prediction: [value: 63.243549425083664, reason: :deadline, inputs_used: 596]}}
+```
+
+- change the code if necessary and hot-code reload in the cluster before running again:
+  `r [Demo, Neuron]; nl Demo; nl Neuron`
+
 ## ideas behind it
 
 - brain has metabolic constraints: [Theriault et. al.: The sense of should: A biologically-based model of social pressure 10.31234/osf.io/x5rbs](https://psyarxiv.com/x5rbs/)

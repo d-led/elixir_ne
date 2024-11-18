@@ -50,7 +50,9 @@ defmodule Neuron do
     incoming_pids
     |> Enum.each(fn pid -> send(pid, {:predict}) end)
 
-    deadline_ms = Application.fetch_env!(:elixir_ne, :prediction_deadline_ms) |> IO.inspect(label: "WAT")
+    deadline_ms =
+      Application.fetch_env!(:elixir_ne, :prediction_deadline_ms)
+
     Process.send_after(self(), {:deadline}, deadline_ms)
     wait_for_predictions(Enum.count(incoming_pids))
   end
