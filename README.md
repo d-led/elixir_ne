@@ -45,7 +45,7 @@ sequenceDiagram
   - all received: `{:prediction, %{delay: 117, input_count: 1000, prediction: [value: 61.81215141710118, reason: :all_received, inputs_used: 1000]}`
   - none received within time limits: `{:prediction, %{delay: 101, input_count: 1000, prediction: [value: -1, reason: :deadline, inputs_used: 0]}}`
 - written deliberately without [GenServer](https://hexdocs.pm/elixir/GenServer.html)s to demonstrate actual message passing that could be mapped onto neuron signalling
-- see the build output: [![Build Status](https://travis-ci.org/d-led/elixir_ne.svg?branch=master)](https://travis-ci.org/d-led/elixir_ne)
+- see the build [output](https://github.com/d-led/elixir_ne/actions)
 - run with: `mix run --no-halt`. Stop with `Ctrl+C` twice
   - requires [Elixir](https://elixir-lang.org/install.html) being installed
   - to run with more than 1000 neurons:
