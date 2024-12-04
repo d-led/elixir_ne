@@ -63,7 +63,7 @@ time N_NEURONS=1000000 mix run
   - ignore the initial unconnected run
 - connect the nodes e.g. on `a`: `Node.connect(:'b@127.0.0.1')`
 - make sure, the nodes are connected: `Node.list()`
-- run the distributed demo: `Demo.start(:demo, [])``
+- run the distributed demo: `Demo.start(:demo, [])`
 - observe the result:
 
 ```shell
