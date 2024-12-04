@@ -2,6 +2,30 @@
 
 ## structure
 
+```mermaid
+sequenceDiagram
+    %% create participant TargetNeuron
+    participant Demo
+    participant TargetNeuron as Neuron(pid=target_neuron)
+    Demo->>+TargetNeuron: starts <br> new_neuron_connected_to(self())
+    loop N times
+        create participant VotingNeuron as Neuron(pid=voting_neuron)
+        Demo->>+VotingNeuron: start <br> new_neuron_connected_to(target_neuron)
+        Demo-->>+TargetNeuron: connect_input_from(voting_neuron)
+    end
+    Demo-->>+TargetNeuron: please_predict
+    par TargetNeuron to TargetNeuron
+        TargetNeuron->>TargetNeuron: predict & sleep
+    and TargetNeuron to VotingNeuron
+        TargetNeuron-->>+VotingNeuron: please_predict
+        VotingNeuron-->>+VotingNeuron: predict & sleep
+        VotingNeuron-->>+TargetNeuron: prediction
+    end
+    TargetNeuron->>+TargetNeuron: wait_for_predictions <br> (with a deadline)
+    TargetNeuron-->>+Demo: aggregate results & send_prediction
+    Demo->>+Demo: wait_for_reply exits
+```
+
 - Demo structure: [lib/demo.ex](lib/demo.ex)
   - a single "demo" neuron is instantiated
   - a `n==1000` neurons are started, knowing their target neuron
