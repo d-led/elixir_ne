@@ -7,10 +7,12 @@ sequenceDiagram
     %% create participant TargetNeuron
     participant Demo
     participant TargetNeuron as Neuron(pid=target_neuron)
+    Note right of Demo: this is synchronous
     Demo->>+TargetNeuron: starts <br> new_neuron_connected_to(self())
     loop N times
         create participant VotingNeuron as Neuron(pid=voting_neuron)
         Demo->>+VotingNeuron: start <br> new_neuron_connected_to(target_neuron)
+        Note right of Demo: this is an async but causal message
         Demo-->>+TargetNeuron: connect_input_from(voting_neuron)
     end
     Demo-->>+TargetNeuron: please_predict
