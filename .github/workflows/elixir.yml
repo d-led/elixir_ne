@@ -35,5 +35,9 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: mix deps.get
-    - name: Run tests
+    - name: Demo with default parameters
       run: mix run
+    - name: Demo with 100k neurons voting
+      run: time N_NEURONS=1000000 mix run
+    - name: Demo with receiving predictions from all neurons
+      run: time N_NEURONS=10000 NEURON_SLEEP_FOR_MS=100 PREDICTION_DEADLINE_MS=1000 mix run
