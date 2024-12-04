@@ -16,15 +16,17 @@ sequenceDiagram
         Demo-->>+TargetNeuron: connect_input_from(voting_neuron)
     end
     Demo-->>+TargetNeuron: please_predict
-    par TargetNeuron to TargetNeuron
-        TargetNeuron->>TargetNeuron: predict & sleep
-    and TargetNeuron to VotingNeuron
+    note right of TargetNeuron: these boxes happen in parallel
+    par on TargetNeuron
         TargetNeuron-->>+VotingNeuron: please_predict
-        VotingNeuron-->>+VotingNeuron: predict & sleep
+        TargetNeuron->>TargetNeuron: predict & sleep
+    and on VotingNeuron
+        VotingNeuron->>+VotingNeuron: receive please_predict
+        VotingNeuron->>+VotingNeuron: predict & sleep
         VotingNeuron-->>+TargetNeuron: prediction
     end
     TargetNeuron->>+TargetNeuron: wait_for_predictions <br> (with a deadline)
-    TargetNeuron-->>+Demo: aggregate results & send_prediction
+    TargetNeuron-->>+Demo: aggregate results & send prediction
     Demo->>+Demo: wait_for_reply exits
 ```
 
