@@ -19,6 +19,8 @@ jobs:
 
     name: Build and test
     runs-on: ubuntu-latest
+    env:
+      ELIXIR_ERL_OPTIONS: +P 5000000
 
     steps:
     - uses: actions/checkout@v4
