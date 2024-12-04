@@ -25,8 +25,8 @@ defmodule Demo do
 
     1..n
     |> Enum.map(fn _ ->
-      {:ok, neuron, selected_node} = new_neuron_connected_to(target_neuron, Node.list())
-      target_neuron |> Neuron.connect_input_from(neuron)
+      {:ok, voting_neuron, selected_node} = new_neuron_connected_to(target_neuron, Node.list())
+      target_neuron |> Neuron.connect_input_from(voting_neuron)
       # count the neurons started on which node
       selected_node
     end)
@@ -50,8 +50,8 @@ defmodule Demo do
     end
   end
 
-  defp new_neuron_connected_to(pid, []) do
-    {:ok, pid} = Task.start(Neuron, :start, [pid])
+  defp new_neuron_connected_to(outgoing_pid, []) do
+    {:ok, pid} = Task.start(Neuron, :start, [outgoing_pid])
     {:ok, pid, Node.self()}
   end
 
