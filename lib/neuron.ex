@@ -50,31 +50,65 @@ defmodule Neuron do
     incoming_pids
     |> Enum.each(fn pid -> send(pid, {:predict}) end)
 
-    deadline_ms =
-      Application.fetch_env!(:elixir_ne, :prediction_deadline_ms)
+    deadline_ms = Application.fetch_env!(:elixir_ne, :prediction_deadline_ms)
+    quiescence_deadline_ms = Application.fetch_env!(:elixir_ne, :prediction_quiescence_deadline_ms)
+    started_at_mono_ms = System.monotonic_time(:millisecond)
 
     Process.send_after(self(), {:deadline}, deadline_ms)
-    wait_for_predictions(Enum.count(incoming_pids))
+
+    wait_for_predictions(
+      Enum.count(incoming_pids),
+      [],
+      started_at_mono_ms,
+      deadline_ms,
+      quiescence_deadline_ms
+    )
   end
 
   # waiting for predictions (signature)
-  defp wait_for_predictions(n, received_predictions \\ [])
+  defp wait_for_predictions(
+         n,
+         received_predictions,
+         started_at_mono_ms,
+         deadline_ms,
+         quiescence_deadline_ms
+       )
 
   # just
-  defp wait_for_predictions(0, received_predictions) do
+  defp wait_for_predictions(
+         0,
+         received_predictions,
+         _started_at_mono_ms,
+         deadline_ms,
+         quiescence_deadline_ms
+       ) do
     [
       value: Enum.max(received_predictions, fn -> -1 end),
       reason: :all_received,
-      inputs_used: Enum.count(received_predictions)
+      inputs_used: Enum.count(received_predictions),
+      prediction_deadline_ms: deadline_ms,
+      prediction_quiescence_deadline_ms: quiescence_deadline_ms
     ]
   end
 
   # waiting for n more predictions
-  defp wait_for_predictions(n, received_predictions) do
+  defp wait_for_predictions(
+         n,
+         received_predictions,
+         started_at_mono_ms,
+         deadline_ms,
+         quiescence_deadline_ms
+       ) do
     receive do
       {:prediction, %{prediction: [value: value]}} ->
         # todo: e.g. a numerical threshold for the value
-        wait_for_predictions(n - 1, [value | received_predictions])
+        wait_for_predictions(
+          n - 1,
+          [value | received_predictions],
+          started_at_mono_ms,
+          deadline_ms,
+          quiescence_deadline_ms
+        )
 
       {:deadline} ->
         # IO.puts "received predictions: #{inspect(received_predictions)}"
@@ -82,19 +116,31 @@ defmodule Neuron do
         [
           value: Enum.max(received_predictions, fn -> -1 end),
           reason: :deadline,
-          inputs_used: Enum.count(received_predictions)
+          inputs_used: Enum.count(received_predictions),
+          prediction_deadline_ms: deadline_ms,
+          prediction_quiescence_deadline_ms: quiescence_deadline_ms
         ]
 
       unknown ->
         IO.puts("received an unknown: #{inspect(unknown)}")
-        wait_for_predictions(n - 1, [received_predictions])
+        wait_for_predictions(
+          n - 1,
+          [received_predictions],
+          started_at_mono_ms,
+          deadline_ms,
+          quiescence_deadline_ms
+        )
     after
-      # timeout
-      200 ->
+      quiescence_deadline_ms ->
+        elapsed_ms = System.monotonic_time(:millisecond) - started_at_mono_ms
+
         [
           value: Enum.max(received_predictions, fn -> -1 end),
-          reason: :timeout,
-          inputs_used: Enum.count(received_predictions)
+          reason: :quiescence_deadline,
+          inputs_used: Enum.count(received_predictions),
+          deadline_remaining_ms: max(deadline_ms - elapsed_ms, 0),
+          prediction_deadline_ms: deadline_ms,
+          prediction_quiescence_deadline_ms: quiescence_deadline_ms
         ]
     end
   end

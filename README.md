@@ -25,12 +25,13 @@ sequenceDiagram
         VotingNeuron->>+VotingNeuron: predict & sleep
         VotingNeuron-->>+TargetNeuron: prediction
     end
-    TargetNeuron->>+TargetNeuron: wait_for_predictions <br> (with a deadline)
-    TargetNeuron-->>+Demo: aggregate results & send prediction
+    TargetNeuron->>+TargetNeuron: wait_for_predictions <br> (real deadline OR quiescence deadline)
+    TargetNeuron-->>+Demo: aggregate results & send prediction <br> (with reason)
     Demo->>+Demo: wait_for_reply exits
 ```
 
 - Demo structure: [lib/demo.ex](lib/demo.ex)
+  - requires [Elixir](https://elixir-lang.org/install.html) being installed
   - a single "demo" neuron is instantiated
   - a `n==1000` neurons are started, knowing their target neuron
   - these are connected to the "demo" neuron
@@ -38,16 +39,15 @@ sequenceDiagram
   - this in turn requests predictions from its connections
 - Simulated voting neuron: [lib/neuron.ex](lib/neuron.ex)
   - if there are no connections, the neuron just returns a random number and sleeps a bit (`delay`)
-  - if there are connections, the neuron tries to receive all the predictions, but within a deadline ("metabolic constraint"): `deadline_ms`
-  - returns the maximal value received so far or `-1` if none were received within a timeout
+  - if there are connections, the neuron tries to receive all the predictions, but within a real deadline (`prediction_deadline_ms`)
+  - in addition, it stops early on inactivity after `prediction_quiescence_deadline_ms` (defaults to `200`)
+  - returns the maximal value received so far or `-1` if none were received before stopping
   - *TODO*: return the best prediction if it's above a numeric threshold
-  - deadline example: `{:prediction, %{delay: 142, input_count: 1000, prediction: [value: 65.30085608551246, reason: :deadline, inputs_used: 496]}}`
-  - all received: `{:prediction, %{delay: 117, input_count: 1000, prediction: [value: 61.81215141710118, reason: :all_received, inputs_used: 1000]}`
-  - none received within time limits: `{:prediction, %{delay: 101, input_count: 1000, prediction: [value: -1, reason: :deadline, inputs_used: 0]}}`
 - written deliberately without [GenServer](https://hexdocs.pm/elixir/GenServer.html)s to demonstrate actual message passing that could be mapped onto neuron signalling
 - see the build [output](https://github.com/d-led/elixir_ne/actions)
-- run with: `mix run --no-halt`. Stop with `Ctrl+C` twice
-  - requires [Elixir](https://elixir-lang.org/install.html) being installed
+- interactive shell only: `iex -S mix`
+- non-interactive demo run: `mix run`
+  - runtime overrides can be passed to `Demo.start(...)`; arguments take precedence over env vars and config defaults
   - to run with more than 1000 neurons:
 
 ```shell
@@ -58,18 +58,78 @@ time N_NEURONS=1000000 mix run
 
 ## distributed neurons
 
-- start one shell with `iex --name a@127.0.0.1 -S mix`
-- and another one with `iex --name b@127.0.0.1 -S mix`
-  - ignore the initial unconnected run
-- connect the nodes e.g. on `a`: `Node.connect(:'b@127.0.0.1')`
-- make sure, the nodes are connected: `Node.list()`
-- run the distributed demo: `Demo.start(:demo, [])`
-- observe the result:
+### copy/paste-able demo
+
+- shell A:
 
 ```shell
-Neurons started on nodes: %{"a@127.0.0.1": 517, "b@127.0.0.1": 483}
-received: {:prediction, %{delay: 149, input_count: 1000, prediction: [value: 63.243549425083664, reason: :deadline, inputs_used: 596]}}
+export ELIXIR_ERL_OPTIONS="+P 5000000"
+iex --name a@127.0.0.1 -S mix
 ```
+
+- shell B:
+
+```shell
+export ELIXIR_ERL_OPTIONS="+P 5000000"
+iex --name b@127.0.0.1 -S mix
+```
+
+- in shell B IEx, connect and run:
+
+```elixir
+Node.connect(:"a@127.0.0.1"); Demo.start(number_of_neurons: 3_000_000, prediction_deadline_ms: 1000)
+```
+
+- if needed, increase top-level wait in shell B IEx:
+
+```elixir
+Demo.start(number_of_neurons: 3_000_000, prediction_deadline_ms: 1000, demo_reply_timeout_ms: 30_000)
+```
+
+- the benchmark starts only after each connected BEAM has finished creating its assigned neurons and reported its started count back to the initiating node
+- startup observability includes, per node, how many neurons were created and how many milliseconds spawning took on that node
+- the demo also prints an explicit startup barrier report and a trigger report that shows the prediction phase started after all node startup reports were collected
+- prediction output includes the configured `prediction_deadline_ms` and `prediction_quiescence_deadline_ms`
+- if prediction stops due to inactivity (`:quiescence_deadline`), output also includes `deadline_remaining_ms` so you can estimate how far you were from the real deadline
+- the default `demo_reply_timeout_ms` is `15000`; if the top-level demo wait still expires before the prediction comes back, the demo prints a `Demo reply timeout` message telling you to increase `demo_reply_timeout_ms`
+
+- for large runs, you can also set the timeout by environment variable in non-interactive mode:
+
+```shell
+DEMO_REPLY_TIMEOUT_MS=30000 N_NEURONS=3000000 mix run
+```
+
+### paste your latest run outputs here
+
+- single-node run output:
+
+```shell
+# paste terminal output from single-node run here
+```
+
+- distributed run output:
+
+```shell
+# paste terminal output from distributed run here
+```
+
+## back-pressure notes
+
+- for large distributed runs, BEAM distribution back-pressure is expected; it slows senders when node-to-node buffers are busy, instead of silently dropping messages
+- in this demo, the top-level neuron is a fan-in bottleneck (many senders, one receiver), so back-pressure and mailbox growth can dominate runtime before all predictions are consumed
+- practical mitigations:
+  - keep `ELIXIR_ERL_OPTIONS="+P 5000000"` (or higher if needed) so process limits are not the first bottleneck
+  - reduce `number_of_neurons` for interactive experiments and increase gradually
+  - increase `prediction_deadline_ms` when you want to use more late arrivals in aggregation
+  - increase `demo_reply_timeout_ms` when the top-level demo wait expires before a reply is printed
+  - prefer running the load from one initiating node at a time; avoid overlapping large runs in multiple consoles
+- if you need to inspect runtime limits, these are useful checks:
+
+```shell
+erl -noshell -eval 'io:format("process_limit=~p~n", [erlang:system_info(process_limit)]), io:format("dist_buf_busy_limit=~p~n", [erlang:system_info(dist_buf_busy_limit)]), halt().'
+```
+
+- distribution back-pressure is parameterizable; if you need to tune it for experiments, set dist buffer busy limit with `+zdbbl` (for example `export ELIXIR_ERL_OPTIONS="+P 5000000 +zdbbl 2048"`)
 
 - change the code if necessary and hot-code reload in the cluster before running again:
   `r [Demo, Neuron]; nl Demo; nl Neuron`
