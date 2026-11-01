@@ -51,7 +51,10 @@ defmodule Neuron do
     |> Enum.each(fn pid -> send(pid, {:predict}) end)
 
     deadline_ms = Application.fetch_env!(:elixir_ne, :prediction_deadline_ms)
-    quiescence_deadline_ms = Application.fetch_env!(:elixir_ne, :prediction_quiescence_deadline_ms)
+
+    quiescence_deadline_ms =
+      Application.fetch_env!(:elixir_ne, :prediction_quiescence_deadline_ms)
+
     started_at_mono_ms = System.monotonic_time(:millisecond)
 
     Process.send_after(self(), {:deadline}, deadline_ms)
@@ -101,10 +104,19 @@ defmodule Neuron do
        ) do
     receive do
       {:prediction, %{prediction: [value: value]}} ->
-        # todo: e.g. a numerical threshold for the value
         wait_for_predictions(
           n - 1,
           [value | received_predictions],
+          started_at_mono_ms,
+          deadline_ms,
+          quiescence_deadline_ms
+        )
+
+      # one input answering with the votes of a whole batch, see BatchVoter
+      {:prediction_batch, values} when is_list(values) ->
+        wait_for_predictions(
+          n - 1,
+          values ++ received_predictions,
           started_at_mono_ms,
           deadline_ms,
           quiescence_deadline_ms
@@ -121,11 +133,13 @@ defmodule Neuron do
           prediction_quiescence_deadline_ms: quiescence_deadline_ms
         ]
 
+      # not a vote: the vote this neuron is still waiting for has not arrived
       unknown ->
         IO.puts("received an unknown: #{inspect(unknown)}")
+
         wait_for_predictions(
-          n - 1,
-          [received_predictions],
+          n,
+          received_predictions,
           started_at_mono_ms,
           deadline_ms,
           quiescence_deadline_ms

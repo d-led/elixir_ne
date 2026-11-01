@@ -30,16 +30,40 @@ jobs:
         elixir-version: '1.17.3' # [Required] Define the Elixir version
         otp-version: '26.0'      # [Required] Define the Erlang/OTP version
     - name: Restore dependencies cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: mix deps.get
+    - name: Tests
+      run: mix test
     - name: Demo with default parameters
       run: mix run
     - name: Demo with 100k neurons voting
       run: time N_NEURONS=1000000 mix run
     - name: Demo with receiving predictions from all neurons
       run: time N_NEURONS=10000 NEURON_SLEEP_FOR_MS=100 PREDICTION_DEADLINE_MS=1000 mix run
+
+  pythonx:
+
+    name: Voting in Python
+    runs-on: ubuntu-latest
+    env:
+      ELIXIR_ERL_OPTIONS: +P 5000000
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Elixir
+      uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
+      with:
+        elixir-version: '1.17.3' # [Required] Define the Elixir version
+        otp-version: '26.0'      # [Required] Define the Erlang/OTP version
+    - name: Install dependencies
+        # Pythonx fetches its own uv and CPython on first compile
+      run: mix deps.get && mix compile
+    - name: Voting in Python tests
+      run: mix test --include pythonx
+    - name: Demo voting in Python
+      run: USE_PYTHONX=1 N_NEURONS=10000 PREDICTION_DEADLINE_MS=1000 mix run

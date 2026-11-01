@@ -18,6 +18,20 @@ config :elixir_ne,
 
 config :elixir_ne,
        :demo_reply_timeout_ms,
-    (System.get_env("DEMO_REPLY_TIMEOUT_MS") || "15000") |> String.to_integer()
+       (System.get_env("DEMO_REPLY_TIMEOUT_MS") || "15000") |> String.to_integer()
+
+# false = Neuron processes, Elixir votes (default). true = 1 BatchVoter per node, Python votes.
+config :elixir_ne,
+       :use_pythonx,
+       (System.get_env("USE_PYTHONX") || "false") in ["1", "true", "yes"]
+
+# Pythonx: minimal env (no deps). Interpreter initializes on first use when this is set.
+config :pythonx, :uv_init,
+  pyproject_toml: """
+  [project]
+  name = "elixir_ne"
+  version = "0.1.0"
+  requires-python = ">=3.10"
+  """
 
 # import_config "#{config_env()}.exs"

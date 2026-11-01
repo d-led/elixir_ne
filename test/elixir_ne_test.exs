@@ -13,7 +13,13 @@ defmodule ElixirNeTest do
   end
 
   test "spawning with metrics reports zero neurons" do
-    assert %{node: node_name, neurons: [], started_count: 0, started_at_ms: started_at_ms, duration_ms: duration_ms} =
+    assert %{
+             node: node_name,
+             neurons: [],
+             started_count: 0,
+             started_at_ms: started_at_ms,
+             duration_ms: duration_ms
+           } =
              Demo.spawn_neurons_with_metrics_for_demo(0, self())
 
     assert node_name == Node.self()

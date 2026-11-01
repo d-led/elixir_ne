@@ -1,5 +1,10 @@
 # elixir_ne
 
+- **Run:** `scripts/run.sh` — one node. **N nodes:** `NODE_COUNT=N scripts/run.sh` — workers start in the background, node1 connects to them and runs the demo.
+- **Interactive:** `scripts/start-interactive.sh`, or `NODE_COUNT=2 scripts/start-interactive.sh` for one IEx (node1) plus a worker (node2). Workers are killed when the script exits. Then `Node.connect(:"node2@127.0.0.1"); Demo.start([])`.
+- **Vote in Python instead of in Elixir processes:** `USE_PYTHONX=1 scripts/run.sh` — see [voting in Python](#voting-in-python-pythonx).
+- **Overrides:** `N_NEURONS`, `NEURON_SLEEP_FOR_MS`, `PREDICTION_DEADLINE_MS`, `DEMO_REPLY_TIMEOUT_MS`, `NODE_COUNT` in the environment, or options passed to `Demo.start(...)` in IEx; arguments win over the environment.
+
 ## structure
 
 ```mermaid
@@ -44,62 +49,12 @@ sequenceDiagram
   - returns the maximal value received so far or `-1` if none were received before stopping
   - *TODO*: return the best prediction if it's above a numeric threshold
 - written deliberately without [GenServer](https://hexdocs.pm/elixir/GenServer.html)s to demonstrate actual message passing that could be mapped onto neuron signalling
+  - the Pythonx batch voter is the one exception: it is plumbing around an interpreter, not a neuron
 - see the build [output](https://github.com/d-led/elixir_ne/actions)
-- interactive shell only: `iex -S mix`
-- non-interactive demo run: `mix run`
-  - runtime overrides can be passed to `Demo.start(...)`; arguments take precedence over env vars and config defaults
-  - to run with more than 1000 neurons:
+- startup observability: per node, how many neurons were started, how long spawning took, and the resident memory of that node's OS process at that moment (`node_rss_mb`)
+- the prediction output reports `python_interpreters` when the run voted in Python
 
-```shell
-# increase maximum allowed processes
-export ELIXIR_ERL_OPTIONS="+P 5000000"
-time N_NEURONS=1000000 mix run
-```
-
-## distributed neurons
-
-### copy/paste-able demo
-
-- shell A:
-
-```shell
-export ELIXIR_ERL_OPTIONS="+P 5000000"
-iex --name a@127.0.0.1 -S mix
-```
-
-- shell B:
-
-```shell
-export ELIXIR_ERL_OPTIONS="+P 5000000"
-iex --name b@127.0.0.1 -S mix
-```
-
-- in shell B IEx, connect and run:
-
-```elixir
-Node.connect(:"a@127.0.0.1"); Demo.start(number_of_neurons: 3_000_000, prediction_deadline_ms: 1000)
-```
-
-- if needed, increase top-level wait in shell B IEx:
-
-```elixir
-Demo.start(number_of_neurons: 3_000_000, prediction_deadline_ms: 1000, demo_reply_timeout_ms: 30_000)
-```
-
-- the benchmark starts only after each connected BEAM has finished creating its assigned neurons and reported its started count back to the initiating node
-- startup observability includes, per node, how many neurons were created and how many milliseconds spawning took on that node
-- the demo also prints an explicit startup barrier report and a trigger report that shows the prediction phase started after all node startup reports were collected
-- prediction output includes the configured `prediction_deadline_ms` and `prediction_quiescence_deadline_ms`
-- if prediction stops due to inactivity (`:quiescence_deadline`), output also includes `deadline_remaining_ms` so you can estimate how far you were from the real deadline
-- the default `demo_reply_timeout_ms` is `15000`; if the top-level demo wait still expires before the prediction comes back, the demo prints a `Demo reply timeout` message telling you to increase `demo_reply_timeout_ms`
-
-- for large runs, you can also set the timeout by environment variable in non-interactive mode:
-
-```shell
-DEMO_REPLY_TIMEOUT_MS=30000 N_NEURONS=3000000 mix run
-```
-
-### paste your latest run outputs here
+## paste your latest run outputs here
 
 - single-node run output:
 
@@ -112,6 +67,32 @@ DEMO_REPLY_TIMEOUT_MS=30000 N_NEURONS=3000000 mix run
 ```shell
 # paste terminal output from distributed run here
 ```
+
+## voting in Python (Pythonx)
+
+The same vote can be computed by CPython instead of by one Elixir process per
+neuron. Comparing these two ways of voting is the point of the Pythonx mode, not
+speed:
+
+```shell
+USE_PYTHONX=1 scripts/run.sh                    # one CPython per node
+NODE_COUNT=2 USE_PYTHONX=1 scripts/run.sh       # one CPython per node, two voters in total
+```
+
+- [lib/batch_voter.ex](lib/batch_voter.ex) stands in for a whole batch of neurons: the single `BatchVoter` of a node asks CPython for one vote per neuron it replaces and answers with one `{:prediction_batch, votes}` message, which the collecting neuron counts as that many votes
+- Pythonx embeds the interpreter into the BEAM's own OS process ([why](https://github.com/elixir-pythonx/pythonx)), and the GIL serializes Python code, so one interpreter and one vote process per node is all there is
+- the vote distribution is the same as a neuron's (`abs(gauss(50, 20))`), but the Pythonx path skips the simulated compute delay (`NEURON_SLEEP_FOR_MS`): it compares the cost of voting, not end-to-end latency
+- Pythonx is started on the first vote, so a run that does not use it never loads an interpreter
+
+### measuring it
+
+`:erlang.memory/1` only counts what the BEAM allocated; an embedded CPython keeps
+its heap outside of that. Memory is therefore read from the OS as the resident
+memory of the node's process ([lib/node_memory.ex](lib/node_memory.ex)).
+
+- `mix run -e 'Demo.measure_pythonx_ram()'` — what the interpreter costs, measured across its first eval on this node
+- `Demo.benchmark_ram(number_of_neurons: 10_000, use_pythonx: false)` (or `use_pythonx: true`) — resident memory a run adds on this node, with the growth per neuron extrapolated to a gigabyte. The benchmark leaves its neurons running until they time out, so run it in a fresh node and not before a real run.
+- every Pythonx run prints a run summary after the prediction (interpreter count and per-node residency, with the interpreter live)
 
 ## back-pressure notes
 
