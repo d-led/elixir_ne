@@ -124,6 +124,35 @@ erl -noshell -eval 'io:format("process_limit=~p~n", [erlang:system_info(process_
 - each neuron (or an aggregation of neurons for efficiency reason) can be represented by an [Erlang process](https://en.wikipedia.org/wiki/Erlang_(programming_language)#Erlang_Worldview)
 - in a rythmic fashion, attention seems to be interrupted: [A rhythmic theory of attention by Ian C. Fiebelkorn, Sabine Kastner](https://pmc.ncbi.nlm.nih.gov/articles/PMC6343831/#S1): "We propose that the presently attended location is periodically re-assessed (**every ~250 ms**) to confirm that it is still the most important location", "These periodic disruptions in attention-related sampling may have provided our ancestors with an evolutionary advantage, e.g., allowing them to detect and therefore avoid predators while foraging."
 
+## Citation
+
+The two papers in [ideas behind it](#ideas-behind-it) are the ones this project
+takes its questions from, and they are the ones to cite. The code is citable
+too: [`CITATION.cff`](CITATION.cff) is what GitHub's *Cite this repository*
+button reads, and Zenodo mints a DOI for each release.
+
+```bibtex
+@article{hawkins2016whyneurons,
+  title   = {Why Neurons Have Thousands of Synapses, a Theory of Sequence Memory in Neocortex},
+  author  = {Hawkins, Jeff and Ahmad, Subutai},
+  journal = {Frontiers in Neural Circuits},
+  volume  = {10},
+  pages   = {23},
+  year    = {2016},
+  doi     = {10.3389/fncir.2016.00023}
+}
+
+@article{hawkins2019framework,
+  title   = {A Framework for Intelligence and Cortical Function Based on Grid Cells in the Neocortex},
+  author  = {Hawkins, Jeff and Lewis, Marcus and Klukas, Mirko and Purdy, Scott and Ahmad, Subutai},
+  journal = {Frontiers in Neural Circuits},
+  volume  = {12},
+  pages   = {121},
+  year    = {2019},
+  doi     = {10.3389/fncir.2018.00121}
+}
+```
+
 ## disclaimer
 
 - I'm not a professional researcher

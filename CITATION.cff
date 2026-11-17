@@ -1,0 +1,56 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the papers it follows."
+title: "elixir_ne"
+type: software
+authors:
+  - family-names: Ledentsov
+    given-names: Dmitry
+    website: "https://github.com/d-led"
+repository-code: "https://github.com/d-led/elixir_ne"
+license: Unlicense
+abstract: >-
+  Neurons as Erlang processes that vote on their predictions: a small
+  distributed experiment in the ideas of Hawkins and Ahmad, run over one node or
+  several.
+keywords:
+  - HTM
+  - sequence memory
+  - thousand brains
+  - Erlang
+  - Elixir
+  - distributed
+# Zenodo mints a DOI for each GitHub release; add it as `doi:` once the first
+# release has been archived.
+references:
+  - type: article
+    title: "Why Neurons Have Thousands of Synapses, a Theory of Sequence Memory in Neocortex"
+    authors:
+      - family-names: Hawkins
+        given-names: Jeff
+      - family-names: Ahmad
+        given-names: Subutai
+    journal: Frontiers in Neural Circuits
+    volume: 10
+    start: 23
+    year: 2016
+    doi: 10.3389/fncir.2016.00023
+    url: "https://doi.org/10.3389/fncir.2016.00023"
+  - type: article
+    title: "A Framework for Intelligence and Cortical Function Based on Grid Cells in the Neocortex"
+    authors:
+      - family-names: Hawkins
+        given-names: Jeff
+      - family-names: Lewis
+        given-names: Marcus
+      - family-names: Klukas
+        given-names: Mirko
+      - family-names: Purdy
+        given-names: Scott
+      - family-names: Ahmad
+        given-names: Subutai
+    journal: Frontiers in Neural Circuits
+    volume: 12
+    start: 121
+    year: 2019
+    doi: 10.3389/fncir.2018.00121
+    url: "https://doi.org/10.3389/fncir.2018.00121"
