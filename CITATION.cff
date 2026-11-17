@@ -8,6 +8,9 @@ authors:
     website: "https://github.com/d-led"
 repository-code: "https://github.com/d-led/elixir_ne"
 license: Unlicense
+version: "0.1.0"
+date-released: "2026-11-17"
+doi: 10.5281/zenodo.24313650
 abstract: >-
   Neurons as Erlang processes that vote on their predictions: a small
   distributed experiment in the ideas of Hawkins and Ahmad, run over one node or
@@ -19,8 +22,7 @@ keywords:
   - Erlang
   - Elixir
   - distributed
-# Zenodo mints a DOI for each GitHub release; add it as `doi:` once the first
-# release has been archived.
+# `doi` is the concept DOI: it always resolves to the latest archived release.
 references:
   - type: article
     title: "Why Neurons Have Thousands of Synapses, a Theory of Sequence Memory in Neocortex"
